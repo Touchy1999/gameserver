@@ -142,3 +142,33 @@ def get_rooms_by_live_id(live_id: int):
         ]
 
         return room_list
+
+
+def get_result_by_room_id(token: str, room_id: int, difficulty: int):
+    with engine.begin() as conn:
+        user = _get_user_by_token(conn, token)
+        result = conn.execute(
+            text(
+                "SELECT `capacity`, `is_disbanded`, (SELECT COUNT(*) FROM `room_member` WHERE `room_member`.`room_id` = `room`.`room_id`) AS `joined_user_count` FROM `room` WHERE `room_id` = :room_id"
+            ),
+            {"room_id": room_id},
+        )
+        room_data = result.fetchone()
+
+        if room_data and not room_data[1] and room_data[0] is not None and room_data[0] > room_data[2]:
+            # 条件が満たされている場合、room_member テーブルに挿入を行う
+            with engine.begin() as conn2:
+                conn2.execute(
+                    text(
+                        "INSERT INTO `room_member` (`room_id`, `member_id`, `diff`) VALUES (:room_id, :member_id, :diff)"
+                    ),
+                    {"room_id": room_id, "member_id": user.id, "diff": difficulty},
+                )
+
+        room_status = {
+            "max_user_count": room_data[0],
+            "is_disbanded": room_data[1],
+            "joined_user_count": room_data[2],
+        }
+        return room_status
+

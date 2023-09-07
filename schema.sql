@@ -18,7 +18,7 @@ CREATE TABLE `room` (
   `room_id` bigint NOT NULL AUTO_INCREMENT,
   `live_id` int DEFAULT NULL,
   `host_id` bigint DEFAULT NULL,
-  `capacity` int DEFAULT NULL, 
+  `capacity` int DEFAULT 0, 
   `is_disbanded` boolean DEFAULT false,
   PRIMARY KEY (`room_id`),
   FOREIGN KEY (`host_id`) REFERENCES `user`(`id`)

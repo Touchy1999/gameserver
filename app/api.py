@@ -134,47 +134,47 @@ def list(live_id: int) -> list[RoomInfo]:
 
 
 @app.post("/room/join")
-def join(room_id: int, select_difficulty: LiveDifficulty) -> JoinRoomResult:
-    room = model.get_rooms_by_live_id(room_id)
+def join(token: UserToken, room_id: int, select_difficulty: LiveDifficulty) -> JoinRoomResult:
+    room = model.get_result_by_room_id(token, room_id, select_difficulty)
     if room is None:
         return JoinRoomResult.OtherError
 
     # Check if the room is full
-    if room.joined_user_count >= room.max_user_count:
+    if room["joined_user_count"] >= room["max_user_count"]:
         return JoinRoomResult.RoomFull
 
     # Check if the room is disbanded
-    if room.is_disbanded:
+    if room["is_disbanded"]:
         return JoinRoomResult.Disbanded
 
     return JoinRoomResult.OK
 
 
-@app.post("/room/wait")
-def wait(room_id: int) -> tuple:
-    # Check if the room exists
-    room = model.get_rooms_by_live_id(room_id)
-    if room is None:
-        raise HTTPException(status_code=404, detail="Room not found")
+# @app.post("/room/wait")
+# def wait(room_id: int) -> tuple:
+#     # Check if the room exists
+#     room = model.get__by_live_id(room_id)
+#     if room is None:
+#         raise HTTPException(status_code=404, detail="Room not found")
 
-    # You can implement the logic to check the wait status of the room here
-    wait_status = model.get_room_wait_status(room_id)
+#     # You can implement the logic to check the wait status of the room here
+#     wait_status = model.get_room_wait_status(room_id)
 
-    # Fetch the list of users in the room
-    users = model.get_users_in_room(room_id)
+#     # Fetch the list of users in the room
+#     users = model.get_users_in_room(room_id)
 
-    # Transform the fetched user data into RoomUser objects
-    room_user_list = [
-        RoomUser(
-            user_id=user.user_id,
-            name=user.name,
-            leader_card_id=user.leader_card_id,
-            select_difficulty=user.select_difficulty,
-            is_me=False,  # You can set this based on your logic
-            is_host=user.is_host,  # Assuming you have a flag to identify the host
-        )
-        for user in users
-    ]
+#     # Transform the fetched user data into RoomUser objects
+#     room_user_list = [
+#         RoomUser(
+#             user_id=user.user_id,
+#             name=user.name,
+#             leader_card_id=user.leader_card_id,
+#             select_difficulty=user.select_difficulty,
+#             is_me=False,  # You can set this based on your logic
+#             is_host=user.is_host,  # Assuming you have a flag to identify the host
+#         )
+#         for user in users
+#     ]
 
-    return wait_status, room_user_list
+#     return wait_status, room_user_list
 
