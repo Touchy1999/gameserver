@@ -84,7 +84,7 @@ class RoomInfo(BaseModel):
     room_id: int
     live_id: int
     joined_user_count: int
-    max_user_cout: int
+    max_user_count: int
 
 
 class CreateRoomRequest(BaseModel):
@@ -122,10 +122,10 @@ def list(live_id: int) -> list[RoomInfo]:
     # Transform the fetched data into RoomInfo objects
     room_info_list = [
         RoomInfo(
-            room_id=room.room_id,
-            live_id=room.live_id,
-            joined_user_count=room.joined_user_count,
-            max_user_count=room.max_user_count,
+            room_id=room["room_id"],
+            live_id=room["live_id"],
+            joined_user_count=room["joined_user_count"],
+            max_user_count=room["max_user_count"],
         )
         for room in rooms
     ]
@@ -137,7 +137,7 @@ def list(live_id: int) -> list[RoomInfo]:
 def join(room_id: int, select_difficulty: LiveDifficulty) -> JoinRoomResult:
     room = model.get_rooms_by_live_id(room_id)
     if room is None:
-        raise HTTPException(status_code=404, detail="Room not found")
+        return JoinRoomResult.OtherError
 
     # Check if the room is full
     if room.joined_user_count >= room.max_user_count:
@@ -146,11 +146,6 @@ def join(room_id: int, select_difficulty: LiveDifficulty) -> JoinRoomResult:
     # Check if the room is disbanded
     if room.is_disbanded:
         return JoinRoomResult.Disbanded
-
-    # Perform any other necessary checks and logic here
-
-    # If all checks pass, you can proceed to join the room
-    # Implement the logic to join the room here
 
     return JoinRoomResult.OK
 

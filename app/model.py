@@ -103,11 +103,19 @@ def create_room(token: str, live_id: int, difficulty: LiveDifficulty):
             raise InvalidToken
         result = conn.execute(
             text(
-                "INSERT INTO `room` (live_id, host_id, diff) VALUES (:live_id, :user.id, :difficulty)"
+                "INSERT INTO `room` (live_id, host_id) VALUES (:live_id, :host_id)"
             ),
-            {"host_id": user.id, "live_id": live_id, "diff": difficulty.value},
+            {"live_id": live_id, "host_id": user.id},
         )
+
         room_id = result.lastrowid
+        
+        conn.execute(
+            text(
+                "INSERT INTO `room_member` (room_id, member_id, diff) VALUES (:room_id, :member_id, :diff)"
+            ),
+            {"room_id": room_id, "member_id": user.id, "diff": difficulty.value},
+        )
 
         print(f"Room created with ID: {room_id}")
 
@@ -118,15 +126,11 @@ def get_rooms_by_live_id(live_id: int):
     with engine.begin() as conn:
         result = conn.execute(
             text(
-                "SELECT `room_id`, `live_id`, `joined_user_count`, `max_user_count` "
-                "FROM `room` WHERE `live_id` = :live_id"
+                "SELECT `room_id`, `live_id`, (SELECT COUNT(*) FROM `room_member` WHERE `room_member`.`room_id` = `room`.`room_id`) AS `joined_user_count`, `capacity` AS `max_user_count` FROM `room` WHERE `live_id` = :live_id"
             ),
             {"live_id": live_id},
         )
         rooms = result.fetchall()
-
-        # Assuming that the result is a list of tuples where each tuple represents a room
-        # You can transform this data into a list of dictionaries
         room_list = [
             {
                 "room_id": room[0],
