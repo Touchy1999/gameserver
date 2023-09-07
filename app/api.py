@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 
 from . import model
 from .auth import UserToken
-from .model import LiveDifficulty
+from .model import LiveDifficulty, JoinRoomResult, WaitRoomStatus
 
 app = FastAPI()
 
@@ -80,9 +80,31 @@ class RoomID(BaseModel):
     room_id: int
 
 
+class RoomInfo(BaseModel):
+    room_id: int
+    live_id: int
+    joined_user_count: int
+    max_user_cout: int
+
+
 class CreateRoomRequest(BaseModel):
     live_id: int
     select_difficulty: LiveDifficulty
+
+
+class RoomUser(BaseModel):
+    user_id: int
+    name: str
+    leader_card_id: int
+    select_difficulty: LiveDifficulty
+    is_me: bool
+    is_host: bool
+
+
+class ResultUser(BaseModel):
+    user_id: int
+    judge_count_list: list[int]
+    score: int
 
 
 @app.post("/room/create")
@@ -91,3 +113,73 @@ def create(token: UserToken, req: CreateRoomRequest) -> RoomID:
     print("/room/create", req)
     room_id = model.create_room(token, req.live_id, req.select_difficulty)
     return RoomID(room_id=room_id)
+
+
+@app.post("/room/list")
+def list(live_id: int) -> list[RoomInfo]:
+    rooms = model.get_rooms_by_live_id(live_id)
+
+    # Transform the fetched data into RoomInfo objects
+    room_info_list = [
+        RoomInfo(
+            room_id=room.room_id,
+            live_id=room.live_id,
+            joined_user_count=room.joined_user_count,
+            max_user_count=room.max_user_count,
+        )
+        for room in rooms
+    ]
+
+    return room_info_list
+
+
+@app.post("/room/join")
+def join(room_id: int, select_difficulty: LiveDifficulty) -> JoinRoomResult:
+    room = model.get_rooms_by_live_id(room_id)
+    if room is None:
+        raise HTTPException(status_code=404, detail="Room not found")
+
+    # Check if the room is full
+    if room.joined_user_count >= room.max_user_count:
+        return JoinRoomResult.RoomFull
+
+    # Check if the room is disbanded
+    if room.is_disbanded:
+        return JoinRoomResult.Disbanded
+
+    # Perform any other necessary checks and logic here
+
+    # If all checks pass, you can proceed to join the room
+    # Implement the logic to join the room here
+
+    return JoinRoomResult.OK
+
+
+@app.post("/room/wait")
+def wait(room_id: int) -> tuple:
+    # Check if the room exists
+    room = model.get_rooms_by_live_id(room_id)
+    if room is None:
+        raise HTTPException(status_code=404, detail="Room not found")
+
+    # You can implement the logic to check the wait status of the room here
+    wait_status = model.get_room_wait_status(room_id)
+
+    # Fetch the list of users in the room
+    users = model.get_users_in_room(room_id)
+
+    # Transform the fetched user data into RoomUser objects
+    room_user_list = [
+        RoomUser(
+            user_id=user.user_id,
+            name=user.name,
+            leader_card_id=user.leader_card_id,
+            select_difficulty=user.select_difficulty,
+            is_me=False,  # You can set this based on your logic
+            is_host=user.is_host,  # Assuming you have a flag to identify the host
+        )
+        for user in users
+    ]
+
+    return wait_status, room_user_list
+

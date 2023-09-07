@@ -82,10 +82,59 @@ class LiveDifficulty(IntEnum):
     hard = 2
 
 
+class JoinRoomResult(IntEnum):
+    OK = 1
+    RoomFull = 2
+    Disbanded = 3
+    OtherError = 4
+
+
+class WaitRoomStatus(IntEnum):
+    Waiting = 1
+    LiveStart = 2
+    Dissolution = 3
+
+
 def create_room(token: str, live_id: int, difficulty: LiveDifficulty):
     """部屋を作ってroom_idを返します"""
     with engine.begin() as conn:
         user = _get_user_by_token(conn, token)
         if user is None:
             raise InvalidToken
-        # TODO: 実装
+        result = conn.execute(
+            text(
+                "INSERT INTO `room` (live_id, host_id, diff) VALUES (:live_id, :user.id, :difficulty)"
+            ),
+            {"host_id": user.id, "live_id": live_id, "diff": difficulty.value},
+        )
+        room_id = result.lastrowid
+
+        print(f"Room created with ID: {room_id}")
+
+        return room_id
+
+
+def get_rooms_by_live_id(live_id: int):
+    with engine.begin() as conn:
+        result = conn.execute(
+            text(
+                "SELECT `room_id`, `live_id`, `joined_user_count`, `max_user_count` "
+                "FROM `room` WHERE `live_id` = :live_id"
+            ),
+            {"live_id": live_id},
+        )
+        rooms = result.fetchall()
+
+        # Assuming that the result is a list of tuples where each tuple represents a room
+        # You can transform this data into a list of dictionaries
+        room_list = [
+            {
+                "room_id": room[0],
+                "live_id": room[1],
+                "joined_user_count": room[2],
+                "max_user_count": room[3],
+            }
+            for room in rooms
+        ]
+
+        return room_list
