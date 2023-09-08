@@ -144,12 +144,17 @@ def join(token: UserToken, room_id: int, select_difficulty: LiveDifficulty) -> J
         return JoinRoomResult.RoomFull
 
     # Check if the room is disbanded
+<<<<<<< HEAD
     if room["waiting_status"] == 3:
+=======
+    if room["is_disbanded"]:
+>>>>>>> b73a9f1f591badbc011f6c6c6e5c17047281fc12
         return JoinRoomResult.Disbanded
 
     return JoinRoomResult.OK
 
 
+<<<<<<< HEAD
 @app.post("/room/wait")
 def wait(token: UserToken, room_id: int) -> tuple:
     wait_status, user_list2 = model.get_users_in_room(token, room_id)
@@ -194,3 +199,33 @@ def result(token: UserToken, room_id: int) -> List[ResultUser]:
         for user_list in user_list
     ]
     return room_user_list
+=======
+# @app.post("/room/wait")
+# def wait(room_id: int) -> tuple:
+#     # Check if the room exists
+#     room = model.get__by_live_id(room_id)
+#     if room is None:
+#         raise HTTPException(status_code=404, detail="Room not found")
+
+#     # You can implement the logic to check the wait status of the room here
+#     wait_status = model.get_room_wait_status(room_id)
+
+#     # Fetch the list of users in the room
+#     users = model.get_users_in_room(room_id)
+
+#     # Transform the fetched user data into RoomUser objects
+#     room_user_list = [
+#         RoomUser(
+#             user_id=user.user_id,
+#             name=user.name,
+#             leader_card_id=user.leader_card_id,
+#             select_difficulty=user.select_difficulty,
+#             is_me=False,  # You can set this based on your logic
+#             is_host=user.is_host,  # Assuming you have a flag to identify the host
+#         )
+#         for user in users
+#     ]
+
+#     return wait_status, room_user_list
+
+>>>>>>> b73a9f1f591badbc011f6c6c6e5c17047281fc12
