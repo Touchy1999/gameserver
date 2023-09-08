@@ -140,7 +140,6 @@ def get_rooms_by_live_id(live_id: int):
             }
             for room in rooms
         ]
-
         return room_list
 
 

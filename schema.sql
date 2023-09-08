@@ -20,11 +20,7 @@ CREATE TABLE `room` (
   `live_id` int DEFAULT NULL,
   `host_id` bigint DEFAULT NULL,
   `capacity` int DEFAULT 0, 
-<<<<<<< HEAD
   `waiting_status` int DEFAULT 1,
-=======
-  `is_disbanded` boolean DEFAULT false,
->>>>>>> b73a9f1f591badbc011f6c6c6e5c17047281fc12
   PRIMARY KEY (`room_id`),
   FOREIGN KEY (`host_id`) REFERENCES `user`(`id`)
 );
@@ -33,15 +29,12 @@ CREATE TABLE `room_member` (
   `room_id` bigint NOT NULL,
   `member_id` bigint NOT NULL,
   `diff` int DEFAULT 0,
-<<<<<<< HEAD
   `score` int DEFAULT 0,
   `perfect` int DEFAULT 0, 
   `great` int DEFAULT 0, 
   `good` int DEFAULT 0, 
   `bad` int DEFAULT 0, 
   `miss` int DEFAULT 0, 
-=======
->>>>>>> b73a9f1f591badbc011f6c6c6e5c17047281fc12
   PRIMARY KEY (`room_id`, `member_id`),
   FOREIGN KEY (`room_id`) REFERENCES `room`(`room_id`),
   FOREIGN KEY (`member_id`) REFERENCES `user`(`id`)
