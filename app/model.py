@@ -99,11 +99,9 @@ def create_room(token: str, live_id: int, difficulty: LiveDifficulty):
     """部屋を作ってroom_idを返します"""
     with engine.begin() as conn:
         user = _get_user_by_token(conn, token)
-        if user is None:
-            raise InvalidToken
         result = conn.execute(
             text(
-                "INSERT INTO `room` (live_id, host_id) VALUES (:live_id, :host_id)"
+                "INSERT INTO `room` (`live_id`, `host_id`) VALUES (:live_id, :host_id)"
             ),
             {"live_id": live_id, "host_id": user.id},
         )
@@ -112,7 +110,7 @@ def create_room(token: str, live_id: int, difficulty: LiveDifficulty):
        
         conn.execute(
             text(
-                "INSERT INTO `room_member` (room_id, member_id, diff) VALUES (:room_id, :member_id, :diff)"
+                "INSERT INTO `room_member` (`room_id`, `member_id`, `diff`) VALUES (:room_id, :member_id, :diff)"
             ),
             {"room_id": room_id, "member_id": user.id, "diff": difficulty},
         )
@@ -206,7 +204,7 @@ def get_users_in_room(token: str, room_id: int):
         if room_status is not None:
             wait_status = room_status[0]
         else:
-            wait_status = None
+            wait_status = 1
 
         return wait_status, user_list
 
@@ -255,14 +253,14 @@ def room_result(token: str, room_id: int):
         # user = _get_user_by_token(conn, token)
         conn.execute(
                     text(
-                        "UPDATE `room` SET `waiting_status` = 3 WHERE room_id = :room_id"
+                        "UPDATE `room` SET `waiting_status` = 3 WHERE `room_id` = :room_id"
                     ),
                     {"room_id": room_id},
         )
 
         result = conn.execute(
                     text(
-                        "SELECT `member_id`, `perfect`, `great`, `good`, `bad`, `miss`, `score` FROM `room_member` WHERE room_id = :room_id"
+                        "SELECT `member_id`, `perfect`, `great`, `good`, `bad`, `miss`, `score` FROM `room_member` WHERE `room_id` = :room_id"
                     ),
                     {"room_id": room_id},
         )
