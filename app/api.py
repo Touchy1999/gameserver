@@ -41,6 +41,7 @@ class UserCreateRequest(BaseModel):
 class UserCreateResponse(BaseModel, strict=True):
     user_token: str
 
+
 class ListRoomsRequest(BaseModel):
     live_id: int
 
@@ -124,7 +125,18 @@ class RoomWait(BaseModel):
 
 
 class Result_user_list(BaseModel):
-    Result_user_list: list[ResultUser]
+    result_user_list: list[ResultUser]
+
+
+class JoinRequest(BaseModel):
+    room_id: int
+    select_difficulty: LiveDifficulty
+
+
+class RoomEnd(BaseModel):
+    room_id: int
+    judge_count_list: list[int]
+    score: int
 
 
 @app.post("/room/create")
@@ -155,26 +167,26 @@ def list(request: ListRoomsRequest) -> Room_info_list:
 
 
 @app.post("/room/join")
-def join(token: UserToken, room_id: int, select_difficulty: LiveDifficulty) -> Join_room_result:
-    room = model.get_result_by_room_id(token, room_id, select_difficulty)
+def join(token: UserToken, req: JoinRequest) -> Join_room_result:
+    room = model.get_result_by_room_id(token, req.room_id, req.select_difficulty)
     join_room_result = JoinRoomResult.OK
     if room is None:
         join_room_result = JoinRoomResult.OtherError
 
     # Check if the room is full
-    if room["joined_user_count"] >= room["max_user_count"]:
+    elif room["joined_user_count"] >= room["max_user_count"]:
         join_room_result = JoinRoomResult.RoomFull
 
     # Check if the room is disbanded
-    if room["waiting_status"] == 3:
+    elif room["waiting_status"] == 3:
         join_room_result = JoinRoomResult.Disbanded
 
     return Join_room_result(join_room_result=join_room_result)
 
 
 @app.post("/room/wait")
-def wait(token: UserToken, room_id: int) -> RoomWait:
-    wait_status, user_list2 = model.get_users_in_room(token, room_id)
+def wait(token: UserToken, req: RoomID) -> RoomWait:
+    wait_status, user_list2 = model.get_users_in_room(token, req.room_id)
     room_user_list = [
         RoomUser(
             user_id=user_list["user_id"],
@@ -190,23 +202,26 @@ def wait(token: UserToken, room_id: int) -> RoomWait:
 
 
 @app.post("/room/start")
-def start(token: UserToken, room_id: int) -> None:
-    model.start_live_in_room(token, room_id)
+def start(token: UserToken, req: RoomID):
+    model.start_live_in_room(token, req.room_id)
+    return Empty()
 
 
 @app.post("/room/leave")
-def leave(token: UserToken, room_id: int) -> None:
-    model.leave_room(token, room_id)
+def leave(token: UserToken, req: RoomID):
+    model.leave_room(token, req.room_id)
+    return Empty()
 
 
 @app.post("/room/end")
-def end(token: UserToken, room_id: int, judge_count_list: List[int], score: int) -> None:
-    model.room_end(token, room_id, judge_count_list, score)
+def end(token: UserToken, req: RoomEnd) -> None:
+    model.room_end(token, req.room_id, req.judge_count_list, req.score)
+    return Empty()
 
 
 @app.post("/room/result")
-def result(token: UserToken, room_id: int) -> Result_user_list:
-    user_list = model.room_result(token, room_id)
+def result(token: UserToken, req: RoomID) -> Result_user_list:
+    user_list = model.room_result(token, req.room_id)
     room_user_list = [
         ResultUser(
             user_id=user_list["user_id"],
@@ -216,3 +231,11 @@ def result(token: UserToken, room_id: int) -> Result_user_list:
         for user_list in user_list
     ]
     return Result_user_list(result_user_list=room_user_list)
+
+
+# @app.post("/room/start")
+# def start_room(token: UserToken, req: RoomID):
+#     """ルーム開始"""
+#     print("/room/start", req)
+#     model.start_room(token, req.room_id)
+#     return Empty()

@@ -95,10 +95,12 @@ class WaitRoomStatus(IntEnum):
     Dissolution = 3
 
 
-def create_room(token: str, live_id: int, difficulty: LiveDifficulty):
+def create_room(token: str, live_id: int, difficulty: int):
     """部屋を作ってroom_idを返します"""
     with engine.begin() as conn:
         user = _get_user_by_token(conn, token)
+        # if user is None:
+        #     raise InvalidToken("Invalid token")
         result = conn.execute(
             text(
                 "INSERT INTO `room` (`live_id`, `host_id`) VALUES (:live_id, :host_id)"
@@ -141,7 +143,7 @@ def get_rooms_by_live_id(live_id: int):
         return room_list
 
 
-def get_result_by_room_id(token: str, room_id: int, difficulty: int):
+def get_result_by_room_id(token: str, room_id: int, difficulty: LiveDifficulty):
     with engine.begin() as conn:
         user = _get_user_by_token(conn, token)
         result = conn.execute(
@@ -159,7 +161,7 @@ def get_result_by_room_id(token: str, room_id: int, difficulty: int):
                     text(
                         "INSERT INTO `room_member` (`room_id`, `member_id`, `diff`) VALUES (:room_id, :member_id, :diff)"
                     ),
-                    {"room_id": room_id, "member_id": user.id, "diff": difficulty},
+                    {"room_id": room_id, "member_id": user.id, "diff": difficulty.value},
                 )
 
             room_status = {
