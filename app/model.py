@@ -244,9 +244,9 @@ def room_end(token: str, room_id: int, judge_count_list: list[int], score: int):
 
         conn.execute(
                 text(
-                    "UPDATE `room_member` SET `perfect` = :perfect, `great` =:great, `good` = :good, `bad` = :bad, `miss` = :miss WHERE `room_id` = :room_id AND `id` = :user_id"
+                    "UPDATE `room_member` SET `perfect` = :perfect, `great` =:great, `good` = :good, `bad` = :bad, `miss` = :miss WHERE `room_id` = :room_id AND `member_id` = :user_id"
                 ),
-                {"room_id": room_id, "score": score, "user_id": user.id, "perefct": judge_count_list[0], "great": judge_count_list[1], "good": judge_count_list[2], "bad": judge_count_list[3], "miss": judge_count_list[4]},
+                {"room_id": room_id, "score": score, "user_id": user.id, "perfect": judge_count_list[0], "great": judge_count_list[1], "good": judge_count_list[2], "bad": judge_count_list[3], "miss": judge_count_list[4]},
         )
 
 
